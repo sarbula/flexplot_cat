@@ -35,9 +35,27 @@ compute_cas_from_model = function(m, outcome_name = NULL, adjust = c("all","inte
   out
 }
 
-# cas_adjustment(small_mixed, mod1, adjust="all")
-# cas_adjustment(small_mixed, model = mod2, adjust="intercept")
-# expect_equal(cas_adjustment(small_mixed, mod1, adjust="none"), small_mixed$y)
+
+#' Create cluster adjusted dataset
+#'
+#' @param d The dataset with clustered data
+#' @param model A model. Defaults to NULL. 
+#' @param adjust The type of cluster adjustment (all, intercept, or none)
+#' @param pred_fixed Prediction of the fixed effect. Defaults to NULL
+#' @param pred_cond Prediction of the conditional effect. Defaults to NULL. 
+#' @param pred_int Prediction of the interceopt. Defaults to NULL. 
+#' @param outcome_name The name of the DV. Defaults to NULL. 
+#' 
+#' There are a lot of NULL options to make it easier for testing. The best approach
+#' is to fit a model first, then provide that as input to the model. If not, you have
+#' to fit the model outside of the function, which is pretty lame. See examples
+#'
+#' @returns a dataset with the dependency in the data removed
+#' @export
+#'
+#' @examples
+#' mod1 = lme4::lmer(y~x + (x | id), data=small_mixed)
+#' new_small  = cas_adjustment(small_mixed, model = mod1, adjust = "all")
 cas_adjustment = function(d, model=NULL, 
                           adjust = c("all","intercept","none"), 
                           pred_fixed=NULL, 

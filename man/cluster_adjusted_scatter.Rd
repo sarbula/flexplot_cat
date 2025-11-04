@@ -6,8 +6,11 @@
 \usage{
 cluster_adjusted_scatter(
   formula,
-  object,
+  object = NULL,
+  data = NULL,
+  random = NULL,
   adjust = c("all", "intercept", "none"),
+  smooth = T,
   ...
 )
 }
