@@ -234,8 +234,8 @@ flexplot_modify_data = function(formula = NULL, data, related = FALSE, variables
     #### order by frequency for categorical outcomes
   } else if (!is.numeric(data[,outcome]) & !is.ordered(data[,outcome])){
     sizes = table(data[,outcome])
-    ord = order(sizes, decreasing = T)
-    data[,outcome] = factor(data[, outcome], levels=rev(names(sizes)[ord]))
+    ord = order(sizes, decreasing = F)
+    data[,outcome] = factor(data[, outcome], levels=names(sizes)[ord])
   }
 
   ### reorder levels of given 2
