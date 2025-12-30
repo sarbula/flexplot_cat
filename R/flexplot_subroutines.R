@@ -1,5 +1,3 @@
-
-
 # this function tests for functions within an R formula and returns those results
 formula_functions = function(formula, data) {
   term_labels = attr(terms(formula), "term.labels")
@@ -128,8 +126,8 @@ modify_association_plot_data = function(data, formula, outcome) {
 
 
 # expect_true(is.factor(modify_univariate_data_numeric(data=data.frame(a=1:4), "1", "a")$a))
-# expect_false(is.factor(modify_univariate_data_numeric(data=data.frame(a=1:5), "1", "a")$a))
-# expect_false(is.factor(modify_univariate_data_numeric(data=data.frame(a=rnorm(111)), "1", "a")$a))
+#expect_false(is.factor(modify_univariate_data_numeric(data=data.frame(a=1:5), "1", "a")$a))
+#expect_false(is.factor(modify_univariate_data_numeric(data=data.frame(a=rnorm(111)), "1", "a")$a))
 modify_univariate_data_numeric = function(data, axis, outcome) {
   if (axis[1] == "1" & is.numeric(data[,outcome]) & length(unique(data[,outcome]))<5){
     data[,outcome] = factor(data[,outcome], ordered=TRUE)
@@ -205,6 +203,15 @@ flexplot_modify_data = function(formula = NULL, data, related = FALSE, variables
   ### convert variables with < 5 categories to ordered factors
   data = flexplot_convert_to_categorical(data, axis, pred.data)
 
+  # Preserve categorical predictor ordering:
+  if (!is.null(axis) && axis[1] != "1" && !is.numeric(data[[axis[1]]])) {
+    # if predictor is character, convert to factor using first-seen order (preserve ordering)
+    if (is.character(data[[axis[1]]])) {
+      data[[axis[1]]] <- factor(data[[axis[1]]], levels = unique(data[[axis[1]]]))
+    }
+    # if predictor is already factor, keep its current levels (do nothing)
+  }
+	
   ### prevent univariates from binning numeric variables with <5 levels
   data = modify_univariate_data_numeric(data=data, axis=axis, outcome=outcome)
   
@@ -225,7 +232,8 @@ flexplot_modify_data = function(formula = NULL, data, related = FALSE, variables
   #### reorder axis 1 it's not already ordered
   if(axis[1] != "1"){
     #### order by medians for numeric outcomes
-    if (!is.numeric(data[,axis[1]]) & is.numeric(data[,outcome]) & !is.ordered(data[, axis[1]]) & !related){
+    # If the predictor is a factor (ordered or unordered), respect its existing levels.
+    if (!is.numeric(data[,axis[1]]) & is.numeric(data[,outcome]) & !is.factor(data[, axis[1]]) & !related){
       if (spread[1]=="quartiles"){ fn = "median"} else {fn = "mean"}
       ord = aggregate(data[,outcome]~data[, axis[1]], FUN=fn, na.rm=T)
       ord = ord[order(ord[,2], decreasing=T),]
@@ -266,7 +274,7 @@ flexplot_errors = function(variables, data, axis){
   
   if (!all(variables %in% names(data))){
     not.there = variables[which(!(variables %in% names(data)))]
-    stop(paste0("Ru oh! Somebody done made a mistake! Looks like you either spelled something wrong, or included a variable not in your dataset! Have you considered spellcheck? (Oh, btw, it was the variable(s) ", paste0(not.there, collapse=","), " that caused a problem"))
+    stop(paste0("Ru oh! Somebody done made a mistake! Looks like you either spelled something wrong, or included a variable not in your dataset! Have you considered spellcheck? (Oh, btw, it was the variable(s): ", paste(not.there, collapse=", "), ")"))
   }
 
 }
@@ -276,8 +284,7 @@ check_error_for_logistic = function(variables, data, method=method, axis) {
   #### give an error if they try to visualize logistic with a categorical x axis
   if (method != "logistic" | length(variables)<1) return(NULL)
   if (is.numeric(data[,axis[1]])) return(NULL)
-  stop(paste0("\nOh wise user of flexplot, you have encountered one of the FEW limitations of flexplot. Sorry, but you cannot plot a logistic curve when a categorical variable is on the x-axis. Sorry! Either remove the logistic request or put a numeric variable on the x axis. \n
-				Best of luck on your statistical journeys."))
+  stop(paste0("\nOh wise user of flexplot, you have encountered one of the FEW limitations of flexplot. Sorry, but you cannot plot a logistic curve when a categorical variable is on the x-axis. Best of luck on your statistical journeys."))
 }
 
 
@@ -507,7 +514,7 @@ flexplot_modify_prediction = function(prediction, axis, num.models, break.me, bi
 
     
   if (!is.na(axis[2]) & length(num.models)>1){
-    stop("Sorry. I can't plot the model(s) lines when there are already lines in the plot. Try putting it in the given area (e.g., y~ x + z | b should become y~ x | b + z), or choose to display only one model")
+    stop("Sorry. I can't plot the model(s) lines when there are already lines in the plot. Try putting the model in the 'given' area (e.g., change y ~ x + z | b to y ~ x | b + z), or choose to display only one type of line.")
   }
   
   
